@@ -6,7 +6,7 @@ const port = process.env.PORT || 3000;
 // const bodyParser = require('body-parser');
 app.use(express.json());
 
-var {datosRecibidos} = require('../routes/middlewares')
+var {datosRecibidos} = require('../Routers/middlewares')
 
 app.listen(port, ()=>{
     console.log(`El server está escuchando el puerto ${port}`);

@@ -10,10 +10,12 @@ Usuario.init({
         primaryKey: true,
         autoIncrement: true
     },
-    name: DataTypes.STRING,
+    user: DataTypes.STRING,
+    completeName: DataTypes.STRING,
     email: DataTypes.STRING,
-    password: DataTypes.STRING,
+    phone: DataTypes.STRING,
     address: DataTypes.STRING,
+    password: DataTypes.STRING,
 },{
     sequelize,
     modelName: "Usuario" //* Este es el nombre de la tabla

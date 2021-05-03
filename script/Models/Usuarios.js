@@ -19,6 +19,38 @@ Usuario.init({
 },{
     sequelize,
     modelName: "Usuario" //* Este es el nombre de la tabla
-})
+});
 
-module.exports = Usuario;
+class Producto extends Model{};
+Producto.init({
+    id:{
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement:true
+    },
+    product: DataTypes.STRING,
+    size: DataTypes.STRING,
+    price: DataTypes.STRING,
+    ingredients: DataTypes.STRING,
+    isVegetarian: DataTypes.STRING,
+},{
+    sequelize,
+    modelName: "Producto"
+});
+
+class Pedidos extends Model{};
+Pedidos.init({
+    id:{
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true
+    },
+    order: DataTypes.STRING,
+    productsBought: DataTypes.STRING,
+    totalPrice: DataTypes.STRING,
+    orderStatus: DataTypes.STRING    
+}, {
+    sequelize,
+    modelName:"Pedidos"
+})
+module.exports = {Usuario, Producto, Pedidos}

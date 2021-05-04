@@ -16,7 +16,7 @@ const middlewares = {
             console.log(Usuario)
             const userCheck = await Usuario.findOne({where:{email:email}});
             console.log(userCheck)
-            if(userCheck ) errors.push('The email registered already exists in our database');
+            if(userCheck) errors.push('The email registered already exists in our database');
 
             //*CHECKING FOR ERRORS:
             if(errors.length>0) {
@@ -26,12 +26,13 @@ const middlewares = {
     },
 
     productValidation: async(req,res,next)=>{
+        console.log(req)
         let errors = [];
         const {product, size, price, ingredients, isVegetarian} = req.body;
         const productCheck = await Producto.findOne({where:{product:product}});
 
-        if(!product, !size, !price, !ingredients, !isVegetarian) errors.push("You must complete all product fields")
-        if(productCheck) errors.push('Product already exists, try another one...');
+        if(!product, !size, !price, !ingredients, !isVegetarian && req.method == "POST") errors.push("You must complete all product fields")
+        if(productCheck && req.method=="POST") errors.push('Product already exists, try another one...');
         console.log(productCheck);
         if(errors.length > 0) {
             return res.status(400).json({message:`${errors}`})}

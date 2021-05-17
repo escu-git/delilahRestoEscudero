@@ -1,0 +1,15 @@
+GET http://localhost:3000/users
+
+###
+POST http://localhost:3000/register
+Content-Type: application/json
+
+{
+    "username":"escu",
+    "completeName": "Escudero Pablo",
+    "email": "escu@gmail.com",
+    "phone": "1132149319",
+    "address": "Calle falsa 123",
+    "password": "qwerty123"
+};
+###

@@ -1,4 +1,6 @@
 const model = require('../Models/Usuarios');
+const jwt = require('jsonwebtoken');
+require('dotenv').config();
 const Usuario = model.Usuario;
 const Producto = model.Producto;
 const Pedidos = model.Pedidos;
@@ -17,14 +19,32 @@ const middlewares = {
             const userCheck = await Usuario.findOne({where:{email:email}});
             console.log(userCheck)
             if(userCheck) errors.push('The email registered already exists in our database');
-
             //*CHECKING FOR ERRORS:
             if(errors.length>0) {
                 console.log(errors)
                 return res.status(400).json({message:`${errors}`})
             }else next();
     },
+        //* Authorization: Bearer <token>
+    authToken: async(req, res, next)=>{
+        const bearerHeader = req.header['authorization'];
+        const token = bearerHeader && bearerHeader.split(' ')[1];
+        if(token === null) return res.status(403).json({message:'token invalid'});
+        
+        jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user)=>{
+            if(err) return res.status(403).json({message:'Token is not longer valid'});
+            req.user = user;
+            console.log(`user ${user} validated correctly...`)
+            next()
+        });
+        
+    },
 
+    adminAuthentication: async(req, res, next)=>{
+        
+        next()
+    },
+    
     productValidation: async(req,res,next)=>{
         console.log(req)
         let errors = [];
@@ -39,7 +59,11 @@ const middlewares = {
             else{
                 next()
             }
-    }
+    },
+
+    orderValidation: async(req, res, next)=>{
+        console.log('Validated!')
+    },
 };
 
 module.exports = middlewares;

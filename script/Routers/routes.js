@@ -79,6 +79,7 @@ router.delete('/delete/:id', async(req,res)=>{
 //! LOGIN:
     router.post('/login', async (req, res, next)=>{
         const {user, email, password, completeName} = req.body;
+        console.log(req.body)
         jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, (err, accessToken)=>{
             if(err) return res.status(401).json({message:'Error while authenticating token'})
             res.json({accessToken:accessToken});
@@ -88,7 +89,7 @@ router.delete('/delete/:id', async(req,res)=>{
 //! PRODUCTS CRUD:
 //*REQUEST TO CREATE A NEW PRODUCT:
 
-router.post('/new-product',productValidation, async(req,res)=>{
+router.post('/products/new',authToken, productValidation, async(req,res)=>{
     const {product, size, price, ingredients, isVegetarian} = req.body;
 
     newProduct={

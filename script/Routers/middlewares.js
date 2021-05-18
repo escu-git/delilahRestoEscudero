@@ -27,16 +27,22 @@ const middlewares = {
     },
         //* Authorization: Bearer <token>
     authToken: async(req, res, next)=>{
-        const bearerHeader = req.header['authorization'];
-        const token = bearerHeader && bearerHeader.split(' ')[1];
-        if(token === null) return res.status(403).json({message:'token invalid'});
+        try {
+            const bearerHeader = req.headers['authorization'];
+            console.log(bearerHeader)
+            const token = bearerHeader.split(' ')[1];
+            if(token === null) return res.status(403).json({message:'token invalid'});
+            jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user)=>{
+                if(err) return res.json({err});
+                req.user = user;
+                console.log(`user ${user} validated correctly...`)
+                next()
+            });
+            
+        } catch (error) {
+            console.log(error)
+        }
         
-        jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user)=>{
-            if(err) return res.status(403).json({message:'Token is not longer valid'});
-            req.user = user;
-            console.log(`user ${user} validated correctly...`)
-            next()
-        });
         
     },
 

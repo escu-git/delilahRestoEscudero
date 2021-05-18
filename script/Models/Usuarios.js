@@ -16,6 +16,11 @@ Usuario.init({
     phone: DataTypes.STRING,
     address: DataTypes.STRING,
     password: DataTypes.STRING,
+    role:{
+        type: DataTypes.STRING,
+        defaultValue: 'regular',
+        enum: ['regular', 'admin']
+    }
 },{
     sequelize,
     modelName: "Usuario" //* Este es el nombre de la tabla

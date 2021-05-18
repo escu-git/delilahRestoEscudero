@@ -40,10 +40,8 @@ const middlewares = {
             });
             
         } catch (error) {
-            console.log(error)
+            console.log(`An error has ocurred: ${error}`)
         }
-        
-        
     },
 
     adminAuthentication: async(req, res, next)=>{

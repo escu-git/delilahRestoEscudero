@@ -61,7 +61,7 @@ router.get('/user/:id',async(req, res)=>{
 
 //*REQUEST FOR MODIFYING USER:
 router.put('/user-update/:id',receivedData, async(req,res)=>{
-    const updatedUser= await Usuario.update(req.body,{where:{id: req.params.id}})
+    const updatedUser= await Usuario.update({where:{id: req.params.id}})
     console.log(updatedUser)
     if(updatedUser[0]!==0) return res.status(200).json("User was succesfully modified");
     res.status(400).json({message:`User wasn't found`})
@@ -70,20 +70,28 @@ router.put('/user-update/:id',receivedData, async(req,res)=>{
 });
 
 //*REQUEST FOR USER DELETING:
-router.delete('/delete/:id', async(req,res)=>{
-    const user = await Usuario.findOne(req.body,{where:{id:req.params.id}})
+router.delete('/delete/:id', authToken, async(req,res)=>{
+    const user = await Usuario.findOne({where:{id:req.params.id}})
     if(user) user.destroy() && res.status(200).json({message:`User ${user.completeName} has been deleted`});
     res.status(400).json({message:`User doesn't exist, try another one...`})
 });
 
 //! LOGIN:
-    router.post('/login', async (req, res, next)=>{
+    router.post('/auth/login', async (req, res)=>{
         const {user, email, password, completeName} = req.body;
-        console.log(req.body)
-        jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, (err, accessToken)=>{
-            if(err) return res.status(401).json({message:'Error while authenticating token'})
-            res.json({accessToken:accessToken});
-        });
+
+        const isRegistered = await Usuario.findOne({where: {user:req.body.user}});
+        console.log(isRegistered)
+        const passwordOK = await Usuario.findOne({where:{password: req.body.password}});
+        console.log(passwordOK)
+        if(checkedPass){
+            jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, (err, accessToken)=>{
+                if(err) return res.status(401).json({message:'Error while authenticating token'})
+                res.json({accessToken:accessToken});
+            });
+        }else {
+            return res.status(401).json({message:'User not registered'})
+        }
     });
 
 //! PRODUCTS CRUD:
@@ -107,14 +115,14 @@ router.post('/products/new',authToken, productValidation, async(req,res)=>{
 });
 
 //*REQUEST FOR ALL PRODUCTS
-router.get('/products', async(req, res)=>{
+router.get('/products', authToken, async(req, res)=>{
     const productRequest = await Producto.findAll()
     if(productRequest) return res.status(200).json(productRequest);
     res.status(400).json({message:`There is no products in our database...`})
 });
 
 //*REQUEST FOR ONE PRODUCT
-router.get('/product/:id', async(req,res)=>{
+router.get('/product/:id', authToken, async(req,res)=>{
     const requestedProduct = await Producto.findOne({ where: { id: req.params.id } });
     if(requestedProduct) return res.status(200).json(requestedProduct);
     res.status(400).json({message:`Product is not in our database`})
@@ -122,7 +130,7 @@ router.get('/product/:id', async(req,res)=>{
 
 //*REQUEST FOR PRODUCT MODIFYING:
 router.put('/product-update/:id', async(req,res)=>{
-    const updateProduct = await Producto.update(req.body,{where: {id:req.params.id}});
+    const updateProduct = await Producto.update({where: {id:req.params.id}});
     const updated = await Producto.findOne({where:{id:req.params.id}});
     if(updateProduct[0]!==0) return res.status(200).json(updated);
     res.status(400).json({message:`Product doesn't exist`});

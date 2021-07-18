@@ -1,152 +1,56 @@
 const router = require('express').Router();
-const middleware = require('../Models/Usuarios');
+const middlewares = require('./middlewares');
+const userControllers = require('../controllers/users');
+const productControllers = require('../controllers/products')
+const rolesControllers = require('../controllers/roles');
+const accessControllers = require('../controllers/access');
+const orderControllers = require('../controllers/orders')
 require('dotenv').config();
-const Usuario = middleware.Usuario;
-const Producto = middleware.Producto;
-const Pedidos = middleware.Pedidos;
-const bodyParser = require('body-parser');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-var {receivedData} = require('./middlewares');
-var {productValidation} = require('./middlewares');
-var {authToken} = require('./middlewares');
-var {adminAuthentication} =require('./middlewares');
+
 
 //! USER INTERFACES:
-router.get('/', async(req, res, next)=>{
-    res.status(200).send({message:"Home Screen"})
-})
+router.get('/', rolesControllers.checkRole )
 
 //! ADMIN INTERFACES: 
-router.get('/admin', adminAuthentication, async(req, res, next)=>{
-    res.status(200).send({message:'Admin screen'})
-});
+router.get('/admin', middlewares.adminAuthentication, rolesControllers.checkRole);
 
-//!USER CRUD
+//! ---------------- USER CRUD ---------------------
 //*NEW USER REGISTER:
-router.post('/register',receivedData, async(req,res,next)=>{
-    const {user, completeName, email, phone, address, password} = req.body; //? Datos del nuevo usuario
-    
-    const salt = await bcrypt.genSalt(5);
-    let hashedPassword = await bcrypt.hash(password,salt);
-    console.log(`${password} --> ${hashedPassword}`)
-    
-    const newUser = {
-        user,
-        completeName,
-        email,
-        phone,
-        address,
-        password: hashedPassword
-    };
-
-    const saveUser = await Usuario.create(newUser); 
-    if(saveUser) return res.status(200).json(newUser);
-    res.status(400).json({message:"Unavailable to create and save user..."})
-});
-
+router.post('/register', middlewares.receivedData, userControllers.registerUser);
 //*REQUEST FOR USER LIST:
-router.get('/users',async(req, res)=>{
-    const users = await Usuario.findAll();
-    if (users) return res.status(200).json(users);
-    res.status(400).json({message:"There is no data to show..."})
-});
-
-//*REQUEST FOR SPECIFIC USER
-router.get('/user/:id',async(req, res)=>{
-    const user = await Usuario.findOne({ where: { id: req.params.id } });
-    if (user) return res.status(200).json(user);
-    res.status(400).json({message:"There is no data to show..."})
-});
-
+router.get('/users', userControllers.getAllUsers);
+//*REQUEST FOR SPECIFIC USER:
+router.get('/user/:id', userControllers.getUserById);
 //*REQUEST FOR MODIFYING USER:
-router.put('/user-update/:id',receivedData, async(req,res)=>{
-    const updatedUser= await Usuario.update({where:{id: req.params.id}})
-    console.log(updatedUser)
-    if(updatedUser[0]!==0) return res.status(200).json("User was succesfully modified");
-    res.status(400).json({message:`User wasn't found`})
-    //**** REVISAR QUE UPDATE NO ELIMINE TODAS LAS PROPIEDADES DE PRODUCT */
-    
-});
-
+router.put('/user-update/:id',middlewares.receivedData, userControllers.updateUserData);
 //*REQUEST FOR USER DELETING:
-router.delete('/delete/:id', authToken, async(req,res)=>{
-    const user = await Usuario.findOne({where:{id:req.params.id}})
-    if(user) user.destroy() && res.status(200).json({message:`User ${user.completeName} has been deleted`});
-    res.status(400).json({message:`User doesn't exist, try another one...`})
-});
+router.delete('/delete/:id', middlewares.authToken, userControllers.deleteUser);
+//! ---------------- ACCESS -------------------------
+router.post('/auth/login', accessControllers.login);
 
-//! LOGIN:
-    router.post('/auth/login', async (req, res)=>{
-        const {user, email, password, completeName} = req.body;
-
-        const isRegistered = await Usuario.findOne({where: {user:req.body.user}});
-        console.log(isRegistered)
-        const passwordOK = await Usuario.findOne({where:{password: req.body.password}});
-        console.log(passwordOK)
-        if(checkedPass){
-            jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, (err, accessToken)=>{
-                if(err) return res.status(401).json({message:'Error while authenticating token'})
-                res.json({accessToken:accessToken});
-            });
-        }else {
-            return res.status(401).json({message:'User not registered'})
-        }
-    });
-
-//! PRODUCTS CRUD:
+//! ---------------- PRODUCT CRUD -------------------
 //*REQUEST TO CREATE A NEW PRODUCT:
-
-router.post('/products/new',authToken, productValidation, async(req,res)=>{
-    const {product, size, price, ingredients, isVegetarian} = req.body;
-
-    newProduct={
-        product,
-        size,
-        price,
-        ingredients,
-        isVegetarian
-    }
-
-    const saveProduct = await Producto.create(newProduct);
-    if(saveProduct) return res.status(200).json({message:`Product ${newProduct.product} was succesfully saved...`});
-    res.status(400).json({message:`Unable to create product...`})
-    
-});
-
+router.post('/products/new',middlewares.authToken,middlewares.productValidation, productControllers.createProduct);
 //*REQUEST FOR ALL PRODUCTS
-router.get('/products', authToken, async(req, res)=>{
-    const productRequest = await Producto.findAll()
-    if(productRequest) return res.status(200).json(productRequest);
-    res.status(400).json({message:`There is no products in our database...`})
-});
-
+router.get('/products', middlewares.authToken, productControllers.getAllProducts);
 //*REQUEST FOR ONE PRODUCT
-router.get('/product/:id', authToken, async(req,res)=>{
-    const requestedProduct = await Producto.findOne({ where: { id: req.params.id } });
-    if(requestedProduct) return res.status(200).json(requestedProduct);
-    res.status(400).json({message:`Product is not in our database`})
-});
-
+router.get('/product/:id', middlewares.authToken, productControllers.getProductById);
 //*REQUEST FOR PRODUCT MODIFYING:
-router.put('/product-update/:id', async(req,res)=>{
-    const updateProduct = await Producto.update({where: {id:req.params.id}});
-    const updated = await Producto.findOne({where:{id:req.params.id}});
-    if(updateProduct[0]!==0) return res.status(200).json(updated);
-    res.status(400).json({message:`Product doesn't exist`});
-
-    //**** REVISAR QUE UPDATE NO ELIMINE TODAS LAS PROPIEDADES DE PRODUCT */
-});
-
+router.put('/product-update/:id', productControllers.updateProduct);
 //*REQUEST FOR PRODUCT DELETING:
-router.delete('/product-delete/:id', async(req,res)=>{
-    const productDelete = await Producto.findOne({where:{id:req.params.id}})
-    if(productDelete) return productDelete.destroy() && res.status(200).json({message:`Product "${req.params.id}" was succesfully deleted...`});
-    res.status(400).json({message:"Cannot find product..."})
-});
+router.delete('/product-delete/:id', productControllers.deleteProduct);
 
-//! ORDERS CRUD:
-
+//! ---------------- ORDERS CRUD -------------------
+//*REQUEST TO CREATE A NEW ORDER:
+router.post('/new-order', )
+//*REQUEST FOR ORDER LIST:
+router.get('/orders',)
+//*REQUEST FOR SPECIFIC ORDER:
+router.get('/order/:id',)
+//*REQUEST FOR ORDER MODIFYING:
+router.put('/update-order/:id',)
+//*REQUEST FOR ORDER DELETING:
+router.delete('/order/:id',)
 
 
 module.exports = router;

@@ -5,12 +5,12 @@ const jwt = require('jsonwebtoken');
 
 
 const rolesControllers = {
-    checkRole:async(req, res, next)=>{
-        res.status(200).send({message:"Home Screen"})
-    }
-    // async(req, res, next)=>{
-    //     res.status(200).send({message:'Admin screen'})
-    // }
+    checkRole: async(req, res)=>{
+        
+    },
+    isAdmin:async(req,res,next)=>{
+
+    },
 }
 
 module.exports = rolesControllers;

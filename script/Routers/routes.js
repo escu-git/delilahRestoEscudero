@@ -26,7 +26,7 @@ router.put('/user-update/:id',middlewares.receivedData, userControllers.updateUs
 //*REQUEST FOR USER DELETING:
 router.delete('/delete/:id', middlewares.authToken, userControllers.deleteUser);
 //! ---------------- ACCESS -------------------------
-router.post('/auth/login', accessControllers.login);
+router.post('/auth/login', accessControllers.isAuthorized);
 
 //! ---------------- PRODUCT CRUD -------------------
 //*REQUEST TO CREATE A NEW PRODUCT:
